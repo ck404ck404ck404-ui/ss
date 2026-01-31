@@ -1,0 +1,27 @@
+# OmniSend Pro - CyberPanel Optimization
+RewriteEngine On
+
+# Ensure data directory is protected
+RewriteRule ^data/.*$ - [F,L]
+
+# Handle routing to index.php for SPA functionality
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L]
+
+# Fix MIME types for React components - Required for LiteSpeed/CyberPanel
+<IfModule mod_mime.c>
+    AddType application/javascript .ts
+    AddType application/javascript .tsx
+    AddType application/javascript .jsx
+    AddType application/javascript .js
+    AddType text/css .css
+</IfModule>
+
+# Force MIME types
+<FilesMatch "\.(tsx|ts|jsx|js)$">
+    ForceType application/javascript
+</FilesMatch>
+
+# Prevent directory browsing
+Options -Indexes

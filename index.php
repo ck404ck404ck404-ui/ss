@@ -1,0 +1,85 @@
+<?php
+/**
+ * OmniSend Pro - CyberPanel Optimized Entry
+ */
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443 ? "https://" : "http://";
+$baseUrl = $protocol . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+$apiUrl = $baseUrl . '/api.php';
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniSend Pro - Email Marketing Suite</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script>
+      // Global configuration
+      window.process = { env: { API_KEY: "" } };
+      window.BASE_URL = "<?php echo $baseUrl; ?>";
+      window.API_ENDPOINT = "<?php echo $apiUrl; ?>";
+    </script>
+
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.3.1",
+        "react-dom": "https://esm.sh/react-dom@18.3.1",
+        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+        "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+        "@google/genai": "https://esm.sh/@google/genai@1.3.0",
+        "lucide-react": "https://esm.sh/lucide-react@0.460.0?deps=react@18.3.1",
+        "recharts": "https://esm.sh/recharts@2.13.0?deps=react@18.3.1,react-dom@18.3.1"
+      }
+    }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #0f172a; margin: 0; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        #root:empty::before {
+            content: "OmniSend Pro Loading...";
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #6366f1;
+            background: white;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-presets="react,typescript" data-type="module">
+        import React from 'react';
+        import { createRoot } from 'react-dom/client';
+        import App from './App.js';
+
+        const init = () => {
+            const container = document.getElementById('root');
+            if (container) {
+                const root = createRoot(container);
+                root.render(<App />);
+                console.log("OmniSend Pro: Application successfully mounted.");
+            }
+        };
+
+        if (document.readyState === 'complete') {
+            init();
+        } else {
+            window.addEventListener('load', init);
+        }
+    </script>
+</body>
+</html>
