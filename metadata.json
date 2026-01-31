@@ -1,7 +1,7 @@
 {
-  "name": "OmniSend Pro - Advanced Email Marketing Suite",
-  "description": "A comprehensive email campaign management platform featuring SMTP rotation, AI-powered content generation, contact management, and detailed analytics.",
+  "name": "OmniSend Pro - Email Marketing Suite",
   "requestFramePermissions": [
     "microphone"
-  ]
+  ],
+  "description": ""
 }

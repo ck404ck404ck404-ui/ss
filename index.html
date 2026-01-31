@@ -11,9 +11,8 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <script>
-      // Global configuration - Do not clear process.env.API_KEY if it's already defined
-      window.process = window.process || { env: {} };
-      // Fallback for API endpoint if not set by the server (e.g., PHP)
+      // Global configuration
+      window.process = window.process || { env: { API_KEY: "" } };
       window.API_ENDPOINT = window.API_ENDPOINT || "/api";
     </script>
 
@@ -27,15 +26,20 @@
     "@google/genai": "https://esm.sh/@google/genai@1.3.0",
     "lucide-react": "https://esm.sh/lucide-react@0.460.0?deps=react@18.3.1",
     "recharts": "https://esm.sh/recharts@2.13.0?deps=react@18.3.1,react-dom@18.3.1",
-    "react/": "https://esm.sh/react@^19.2.4/"
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
   }
 }
 </script>
 
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #0f172a; margin: 0; }
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #0f172a; margin: 0; overflow: hidden; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
         #root:empty::before {
-            content: "OmniSend Pro Loading...";
+            content: "OmniSend Pro Initializing...";
             position: fixed;
             inset: 0;
             display: flex;
@@ -46,34 +50,16 @@
             background: white;
             z-index: 1000;
         }
-        /* Custom scrollbar utility */
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        @keyframes pulse-soft {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
+        }
+        .animate-pulse-soft { animation: pulse-soft 2s infinite ease-in-out; }
     </style>
 </head>
 <body>
     <div id="root"></div>
-
-    <script type="text/babel" data-presets="react,typescript" data-type="module">
-        import React from 'react';
-        import { createRoot } from 'react-dom/client';
-        import App from './App.js';
-
-        const init = () => {
-            const container = document.getElementById('root');
-            if (container) {
-                const root = createRoot(container);
-                root.render(<App />);
-                console.log("OmniSend Pro: Application successfully mounted.");
-            }
-        };
-
-        if (document.readyState === 'complete') {
-            init();
-        } else {
-            window.addEventListener('load', init);
-        }
-    </script>
+    <!-- The index.tsx file will be automatically imported by the environment -->
 </body>
 </html>
