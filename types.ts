@@ -12,7 +12,8 @@ export interface Contact {
   email: string;
   name: string;
   group: string;
-  status: 'active' | 'unsubscribed' | 'bounced';
+  status: 'active' | 'unsubscribed' | 'bounced' | 'unverified';
+  added: string;
   customFields: Record<string, string>;
   history?: EmailHistory[];
 }
@@ -51,7 +52,6 @@ export interface EmailTemplate {
   lastUsed?: string;
 }
 
-// Rename object to VIEW_TYPES to avoid collision with the type ViewType in Babel
 export const VIEW_TYPES = {
   DASHBOARD: 'DASHBOARD',
   CAMPAIGNS: 'CAMPAIGNS',
@@ -62,18 +62,11 @@ export const VIEW_TYPES = {
   AI_TOOLS: 'AI_TOOLS',
   LIVE_MONITOR: 'LIVE_MONITOR',
   BUSINESS: 'BUSINESS',
-  ACCOUNT: 'ACCOUNT'
+  ACCOUNT: 'ACCOUNT',
+  SETTINGS: 'SETTINGS'
 } as const;
 
 export type ViewType = typeof VIEW_TYPES[keyof typeof VIEW_TYPES];
-
-export interface FollowUp {
-  id: string;
-  delayDays: number;
-  subject: string;
-  body: string;
-  condition: 'if_not_opened' | 'if_not_clicked' | 'always';
-}
 
 export interface Campaign {
   id: string;
@@ -85,14 +78,15 @@ export interface Campaign {
   scheduledAt?: string;
   timezone?: string;
   sendingSpeed: number;
+  isWarmup: boolean;
   useRandomDelay: boolean;
   smtpPoolIds: string[];
   contacts: string[];
-  followUps?: FollowUp[];
   stats: {
     sent: number;
     failed: number;
     opened: number;
     clicked: number;
+    total: number;
   };
 }

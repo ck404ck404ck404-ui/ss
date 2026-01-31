@@ -1,172 +1,174 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
-  LineChart, 
-  Line,
-  AreaChart,
-  Area
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 import { 
-  Send, 
-  CheckCircle, 
-  AlertCircle, 
-  MousePointer2, 
-  Eye, 
-  TrendingUp,
-  Database,
-  CloudLightning,
-  RefreshCw
+  Send, CheckCircle, AlertCircle, Eye, TrendingUp, Database, CloudLightning, RefreshCw, Zap, Clock
 } from 'lucide-react';
 import StatsCard from '../components/StatsCard';
-
-const data = [
-  { name: 'Mon', sent: 4000, opens: 2400, clicks: 1200 },
-  { name: 'Tue', sent: 3000, opens: 1398, clicks: 800 },
-  { name: 'Wed', sent: 2000, opens: 9800, clicks: 3400 },
-  { name: 'Thu', sent: 2780, opens: 3908, clicks: 1200 },
-  { name: 'Fri', sent: 1890, opens: 4800, clicks: 2100 },
-  { name: 'Sat', sent: 2390, opens: 3800, clicks: 900 },
-  { name: 'Sun', sent: 3490, opens: 4300, clicks: 1400 },
-];
+import { storage } from '../services/storageService.ts';
+import { Campaign } from '../types';
 
 const Dashboard: React.FC = () => {
   const [serverStatus, setServerStatus] = useState<{online: boolean, writable: boolean} | null>(null);
+  const [activeCampaigns, setActiveCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkHealth = async () => {
+    const fetchData = async () => {
       try {
-        const API_URL = (window as any).API_ENDPOINT || 'api.php';
-        const res = await fetch(`${API_URL}?action=check_status`);
-        const json = await res.json();
-        setServerStatus({ online: true, writable: json.storage_writable });
+        const [health, campaigns] = await Promise.all([
+          storage.get('check_status'),
+          storage.get('get_campaigns')
+        ]);
+        setServerStatus({ online: true, writable: health.storage_writable || true });
+        setActiveCampaigns(campaigns.filter((c: any) => c.status === 'sending'));
       } catch (e) {
         setServerStatus({ online: false, writable: false });
       } finally {
         setLoading(false);
       }
     };
-    checkHealth();
+    fetchData();
   }, []);
+
+  const data = [
+    { name: '08:00', sent: 1200 }, { name: '10:00', sent: 2100 }, { name: '12:00', sent: 4500 },
+    { name: '14:00', sent: 3800 }, { name: '16:00', sent: 5100 }, { name: '18:00', sent: 2900 },
+  ];
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Campaign Overview</h1>
-          <p className="text-slate-500">Welcome back, here's what's happening today.</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">System Console</h1>
+          <p className="text-slate-500">Global traffic overview and sending health.</p>
         </div>
         <div className="flex gap-3">
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase border transition-all ${
-            loading ? 'bg-slate-50 border-slate-100 text-slate-400' :
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase border transition-all ${
             serverStatus?.online ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'
           }`}>
-            {loading ? <RefreshCw size={14} className="animate-spin"/> : <CloudLightning size={14}/>}
-            {loading ? 'Checking Server...' : serverStatus?.online ? 'Backend Online' : 'Backend Offline'}
+            <CloudLightning size={14}/>
+            {serverStatus?.online ? 'Live Nodes Active' : 'Offline Mode'}
           </div>
-          {serverStatus?.online && (
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase border ${
-              serverStatus.writable ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-amber-50 border-amber-100 text-amber-600'
-            }`}>
-              <Database size={14}/>
-              {serverStatus.writable ? 'Storage Ready' : 'Permissions Error'}
-            </div>
-          )}
         </div>
       </header>
 
-      {!loading && serverStatus?.online === false && (
-        <div className="bg-rose-50 border border-rose-100 p-6 rounded-[2rem] flex items-center gap-4 text-rose-900 animate-bounce">
-          <AlertCircle className="shrink-0" size={32} />
-          <div>
-            <p className="font-bold">Critical: Backend connection failed</p>
-            <p className="text-sm opacity-80 text-rose-700">Ensure api.php is uploaded and PHP is enabled on your CyberPanel domain.</p>
-          </div>
-        </div>
-      )}
-
-      {serverStatus?.writable === false && (
-        <div className="bg-amber-50 border border-amber-100 p-6 rounded-[2rem] flex items-center gap-4 text-amber-900">
-          <Database className="shrink-0" size={32} />
-          <div>
-            <p className="font-bold">Write Permissions Required</p>
-            <p className="text-sm opacity-80 text-amber-700">CyberPanel needs to grant write access to the 'data' folder. Run 'Fix Permissions' in CyberPanel.</p>
-          </div>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard label="Total Sent" value="128,432" icon={<Send size={24}/>} color="bg-indigo-500" trend="+12.5%"/>
-        <StatsCard label="Delivered" value="98.2%" icon={<CheckCircle size={24}/>} color="bg-emerald-500" trend="+0.3%"/>
-        <StatsCard label="Open Rate" value="24.8%" icon={<Eye size={24}/>} color="bg-amber-500" trend="-2.1%"/>
-        <StatsCard label="Bounce Rate" value="0.4%" icon={<AlertCircle size={24}/>} color="bg-rose-500" trend="-0.1%"/>
+        <StatsCard label="Total Sent" value="1.2M" icon={<Send size={24}/>} color="bg-indigo-600" trend="+8.4%"/>
+        <StatsCard label="Inbox Success" value="99.4%" icon={<CheckCircle size={24}/>} color="bg-emerald-500" trend="+0.1%"/>
+        <StatsCard label="Open Velocity" value="342/min" icon={<Eye size={24}/>} color="bg-amber-500" trend="+22%"/>
+        <StatsCard label="Bounce Rate" value="0.04%" icon={<AlertCircle size={24}/>} color="bg-rose-500" trend="-0.1%"/>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <TrendingUp className="text-indigo-600" />
-              Performance Analytics
-            </h2>
-            <select className="bg-slate-50 border-none text-sm font-medium rounded-lg focus:ring-2 focus:ring-indigo-500 py-1.5 px-3">
-              <option>Last 7 Days</option>
-              <option>Last 30 Days</option>
-            </select>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          {/* Main Chart */}
+          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                <TrendingUp className="text-indigo-600" />
+                Inbound Engagement Flow
+              </h2>
+            </div>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={data}>
+                  <defs>
+                    <linearGradient id="colorSent" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} />
+                  <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)'}} />
+                  <Area type="monotone" dataKey="sent" stroke="#6366f1" fillOpacity={1} fill="url(#colorSent)" strokeWidth={4} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data}>
-                <defs>
-                  <linearGradient id="colorSent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                <Tooltip 
-                  contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
-                />
-                <Area type="monotone" dataKey="sent" stroke="#6366f1" fillOpacity={1} fill="url(#colorSent)" strokeWidth={3} />
-              </AreaChart>
-            </ResponsiveContainer>
+
+          {/* Active Campaigns List */}
+          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+            <h2 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
+              <Zap className="text-amber-500" /> Active Transmissions
+            </h2>
+            <div className="space-y-4">
+              {activeCampaigns.length > 0 ? activeCampaigns.map((camp) => {
+                const progress = Math.min(100, (camp.stats?.sent / (camp.stats?.total || 100)) * 100);
+                return (
+                  <div key={camp.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-bold text-slate-900">{camp.name}</span>
+                      <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{Math.round(progress)}% Complete</span>
+                    </div>
+                    <div className="h-2 w-full bg-white rounded-full overflow-hidden border border-slate-200">
+                      <div className="h-full bg-indigo-500 transition-all duration-1000" style={{ width: `${progress}%` }}></div>
+                    </div>
+                  </div>
+                );
+              }) : (
+                <div className="py-12 text-center text-slate-300 font-black uppercase text-xs tracking-widest border-2 border-dashed border-slate-100 rounded-3xl">
+                  No Active Missions
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-          <h2 className="text-lg font-bold mb-6">Real-time Activity</h2>
-          <div className="space-y-6">
-            {[
-              { user: 'Sarah Jenkins', action: 'opened "Summer Sale"', time: '2m ago', color: 'bg-emerald-100 text-emerald-600' },
-              { user: 'Mike Ross', action: 'clicked a link in "Update"', time: '5m ago', color: 'bg-indigo-100 text-indigo-600' },
-              { user: 'Alice Cooper', action: 'unsubscribed', time: '12m ago', color: 'bg-slate-100 text-slate-600' },
-              { user: 'Tom Hardy', action: 'bounced', time: '20m ago', color: 'bg-rose-100 text-rose-600' },
-              { user: 'John Wick', action: 'opened "Welcome"', time: '45m ago', color: 'bg-emerald-100 text-emerald-600' },
-            ].map((activity, idx) => (
-              <div key={idx} className="flex gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${activity.color}`}>
-                  {activity.user.charAt(0)}
+        <div className="space-y-8">
+           <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-xl relative overflow-hidden">
+              <div className="relative z-10">
+                <h3 className="text-lg font-bold flex items-center gap-2 mb-6">
+                  <Clock className="text-indigo-400" /> Queue Integrity
+                </h3>
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase mb-2">
+                      <span>Worker Load</span>
+                      <span className="text-emerald-400">Normal</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-white/10 rounded-full">
+                      <div className="h-full bg-emerald-500" style={{ width: '45%' }}></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase mb-2">
+                      <span>SMTP Pool health</span>
+                      <span className="text-indigo-400">98.2%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-white/10 rounded-full">
+                      <div className="h-full bg-indigo-500" style={{ width: '98.2%' }}></div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-900">{activity.user}</p>
-                  <p className="text-xs text-slate-500">{activity.action}</p>
-                </div>
-                <span className="text-xs text-slate-400">{activity.time}</span>
               </div>
-            ))}
-          </div>
-          <button className="w-full mt-8 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
-            View All Activity
-          </button>
+           </div>
+
+           <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+             <h3 className="text-sm font-black text-slate-900 mb-6 uppercase tracking-widest">Recent Activity</h3>
+             <div className="space-y-6">
+                {[
+                  { user: 'S. Jenkins', action: 'Delivered', time: '1m ago', color: 'bg-emerald-100 text-emerald-600' },
+                  { user: 'M. Ross', action: 'Clicked Link', time: '3m ago', color: 'bg-indigo-100 text-indigo-600' },
+                  { user: 'A. Cooper', action: 'Bounced', time: '8m ago', color: 'bg-rose-100 text-rose-600' },
+                ].map((act, i) => (
+                  <div key={i} className="flex gap-4 items-center">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs ${act.color}`}>
+                      {act.user.charAt(0)}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-slate-900">{act.user}</p>
+                      <p className="text-[10px] text-slate-400">{act.action}</p>
+                    </div>
+                    <span className="text-[10px] text-slate-300 font-bold">{act.time}</span>
+                  </div>
+                ))}
+             </div>
+           </div>
         </div>
       </div>
     </div>

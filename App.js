@@ -11,6 +11,7 @@ import LiveMonitor from './views/LiveMonitor.tsx';
 import Analytics from './views/Analytics.tsx';
 import BusinessCenter from './views/BusinessCenter.tsx';
 import AccountSettings from './views/AccountSettings.tsx';
+import Settings from './views/Settings.tsx';
 import Login from './views/Login.tsx';
 import LiveAssistant from './components/LiveAssistant.tsx';
 import { VIEW_TYPES } from './types.ts';
@@ -44,6 +45,7 @@ const App = () => {
       case VIEW_TYPES.ANALYTICS: return <Analytics />;
       case VIEW_TYPES.BUSINESS: return <BusinessCenter />;
       case VIEW_TYPES.ACCOUNT: return <AccountSettings />;
+      case VIEW_TYPES.SETTINGS: return <Settings />;
       default: return <Dashboard />;
     }
   };
@@ -67,30 +69,30 @@ const App = () => {
       )}
 
       <main className="flex-1 lg:ml-64 flex flex-col min-h-screen w-full overflow-hidden">
-        <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 md:px-8 py-4 flex items-center justify-between">
+        <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 md:px-8 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
               <Menu size={24} />
             </button>
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full border border-indigo-100">
+            <div className="hidden sm:flex items-center gap-3 px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full border border-indigo-100">
               <Cpu size={14} />
-              <span className="text-[10px] font-black uppercase tracking-wider">Cloud Native Mode</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">Enterprise Neural Node</span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-bold text-slate-900 leading-none mb-1">Administrator</p>
-              <div className="text-[10px] font-bold text-emerald-500 uppercase flex items-center justify-end gap-1 tracking-tighter">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> App Ready
+              <p className="text-sm font-black text-slate-900 leading-none mb-1">Super Admin</p>
+              <div className="text-[10px] font-black text-emerald-500 uppercase flex items-center justify-end gap-1.5 tracking-tighter">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> SYSTEM NOMINAL
               </div>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-inner">
-              <ShieldCheck size={20} />
+            <div className="w-12 h-12 rounded-[1.25rem] bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-600/20">
+              <ShieldCheck size={24} />
             </div>
           </div>
         </div>
         
-        <div className="p-4 md:p-8 max-w-7xl mx-auto w-full flex-1 overflow-y-auto custom-scrollbar">
+        <div className="p-4 md:p-10 max-w-7xl mx-auto w-full flex-1 overflow-y-auto custom-scrollbar">
           {renderView()}
         </div>
         

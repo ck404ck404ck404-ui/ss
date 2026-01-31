@@ -1,15 +1,21 @@
 
 <?php
 /**
- * OmniSend Pro - Core Backend Engine Optimized for CyberPanel
+ * OmniSend Pro - Core Backend Engine Optimized for CyberPanel/LiteSpeed
  */
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
-// CORS Headers
+// Detect base URL for proper routing
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443 ? "https://" : "http://";
+$host = $_SERVER['HTTP_HOST'];
+$uri = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+$baseUrl = $protocol . $host . $uri;
+
+// CORS Headers - Vital for live environments
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -20,20 +26,20 @@ header('Content-Type: application/json; charset=utf-8');
 
 $dataDir = __DIR__ . '/data/';
 
-// CyberPanel/LiteSpeed Permission Check
+// Environment & Permission Sanitization
 function check_environment($dir) {
     if (!file_exists($dir)) {
-        if (!mkdir($dir, 0755, true)) {
-            return ["success" => false, "error" => "Cannot create data directory. Check folder permissions."];
+        if (!@mkdir($dir, 0755, true)) {
+            return ["success" => false, "error" => "Cannot create data directory ($dir). Check parent folder permissions."];
         }
     }
     if (!is_writable($dir)) {
-        return ["success" => false, "error" => "Data directory is not writable. Run 'chown' on CyberPanel."];
+        return ["success" => false, "error" => "Data directory is not writable. Ensure CyberPanel user owns the folder."];
     }
     
     $htaccess = $dir . '.htaccess';
     if (!file_exists($htaccess)) {
-        file_put_contents($htaccess, "Deny from all");
+        @file_put_contents($htaccess, "Deny from all");
     }
     return ["success" => true];
 }
@@ -41,13 +47,13 @@ function check_environment($dir) {
 function get_json($filename) {
     $file = __DIR__ . '/data/' . $filename . '.json';
     if (!file_exists($file)) return [];
-    $content = file_get_contents($file);
+    $content = @file_get_contents($file);
     return json_decode($content, true) ?: [];
 }
 
 function save_json($filename, $data) {
     $file = __DIR__ . '/data/' . $filename . '.json';
-    return file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT));
+    return @file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT));
 }
 
 $action = $_GET['action'] ?? '';
@@ -151,20 +157,17 @@ try {
             $processed = 0;
             foreach ($campaigns as &$campaign) {
                 if ($campaign['status'] === 'sending') {
-                    // Simulate picking a sender from the pool
                     $pool = $campaign['smtpPoolIds'] ?? [];
-                    if (empty($pool)) continue;
+                    if (empty($pool) || empty($senders)) continue;
                     
                     $senderId = $pool[array_rand($pool)];
                     $activeSender = null;
                     foreach ($senders as $s) { if ($s['id'] === $senderId) $activeSender = $s; }
                     
-                    if (!$activeSender) continue;
+                    if (!$activeSender || empty($contacts)) continue;
 
-                    // Pick a random contact (in a real app this would track sent_to)
-                    $recipient = $contacts[array_rand($contacts)] ?? ['email' => 'test@example.com', 'name' => 'Demo User'];
-                    
-                    $success = rand(0, 100) > 2; // 98% success rate simulation
+                    $recipient = $contacts[array_rand($contacts)];
+                    $success = rand(0, 100) > 5; // 95% simulation
                     
                     $logEntry = [
                         'id' => uniqid(),
@@ -177,7 +180,7 @@ try {
                     ];
                     
                     array_unshift($logs, $logEntry);
-                    if (count($logs) > 100) array_pop($logs);
+                    if (count($logs) > 50) array_pop($logs);
                     
                     if ($success) {
                         $campaign['stats']['sent']++;
@@ -185,7 +188,7 @@ try {
                         $campaign['stats']['failed']++;
                     }
                     $processed++;
-                    break; // Process one per heartbeat to simulate throttle
+                    break; 
                 }
             }
             
@@ -197,10 +200,11 @@ try {
         case 'check_status':
             $is_writable = is_writable($dataDir);
             echo json_encode([
-                'installed' => true, 
+                'online' => true,
                 'php_version' => PHP_VERSION,
                 'storage_writable' => $is_writable,
-                'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'
+                'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
+                'base_url' => $baseUrl
             ]);
             break;
 

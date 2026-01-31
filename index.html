@@ -11,9 +11,10 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <script>
-      // Global configuration
-      window.process = { env: { API_KEY: "" } };
-      window.API_ENDPOINT = "/api";
+      // Global configuration - Do not clear process.env.API_KEY if it's already defined
+      window.process = window.process || { env: {} };
+      // Fallback for API endpoint if not set by the server (e.g., PHP)
+      window.API_ENDPOINT = window.API_ENDPOINT || "/api";
     </script>
 
     <script type="importmap">
@@ -45,6 +46,10 @@
             background: white;
             z-index: 1000;
         }
+        /* Custom scrollbar utility */
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -53,14 +58,21 @@
     <script type="text/babel" data-presets="react,typescript" data-type="module">
         import React from 'react';
         import { createRoot } from 'react-dom/client';
-        // App.js লোড করার সময় ব্রাউজার যেন সরাসরি ESM হিসেবে ট্রিট করে
         import App from './App.js';
 
-        const container = document.getElementById('root');
-        if (container) {
-            const root = createRoot(container);
-            root.render(<App />);
-            console.log("OmniSend Pro: App mounted successfully.");
+        const init = () => {
+            const container = document.getElementById('root');
+            if (container) {
+                const root = createRoot(container);
+                root.render(<App />);
+                console.log("OmniSend Pro: Application successfully mounted.");
+            }
+        };
+
+        if (document.readyState === 'complete') {
+            init();
+        } else {
+            window.addEventListener('load', init);
         }
     </script>
 </body>
